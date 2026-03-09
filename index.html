@@ -213,7 +213,7 @@
                         <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white rounded-2xl p-6 shadow-sm border-none col-span-2 flex flex-col justify-center">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <div class="text-emerald-200 text-sm font-medium uppercase tracking-wider mb-1">Net Profit</div>
+                                    <div class="text-emerald-200 text-sm font-medium uppercase tracking-wider mb-1">Net Profit <span class="text-[10px] opacity-75 font-normal ml-1" id="dash-profit-label">(Standard)</span></div>
                                     <div class="text-4xl md:text-5xl font-bold tracking-tight" id="dash-profit">₹0.00</div>
                                 </div>
                                 <div class="text-right">
@@ -420,6 +420,8 @@
                                 <div class="flex gap-2 p-1 bg-slate-100 rounded-xl mb-4" id="payment-mode-toggle">
                                     <button onclick="setPaymentMode('upi')" id="btn-mode-upi" class="flex-1 py-2 rounded-lg text-sm font-medium bg-white shadow-sm text-emerald-700 transition-all">UPI / QR</button>
                                     <button onclick="setPaymentMode('cash')" id="btn-mode-cash" class="flex-1 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 transition-all">Cash</button>
+                                    <!-- Credit Feature Implemented -->
+                                    <button onclick="setPaymentMode('credit')" id="btn-mode-credit" class="flex-1 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 transition-all">Credit</button>
                                 </div>
                                 <div id="qr-container" class="flex flex-col items-center justify-center p-4 bg-emerald-50 rounded-xl border border-emerald-100 transition-all">
                                     <div class="text-xs font-medium text-emerald-600 mb-3 uppercase tracking-wider">Auto-Updating QR</div>
@@ -429,6 +431,12 @@
                                 <div id="cash-container" class="hidden text-center p-6 bg-slate-50 rounded-xl transition-all">
                                     <div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-2"><i data-lucide="indian-rupee" class="w-5 h-5 text-slate-500"></i></div>
                                     <p class="text-slate-600 font-medium text-sm">Cash Payment</p>
+                                </div>
+                                <!-- Credit Container UI -->
+                                <div id="credit-container" class="hidden text-center p-6 bg-amber-50 rounded-xl border border-amber-100 transition-all">
+                                    <div class="w-10 h-10 bg-amber-200 rounded-full flex items-center justify-center mx-auto mb-2"><i data-lucide="clock" class="w-5 h-5 text-amber-700"></i></div>
+                                    <p class="text-amber-800 font-bold text-sm">Credit (Pay Later)</p>
+                                    <p class="text-xs text-amber-600 mt-1">Amount tracked as Unpaid Ledger.</p>
                                 </div>
                             </div>
                         </div>
@@ -534,6 +542,8 @@
                             <p class="text-slate-500">Advanced filtering, FY sort, bulk exports, and returns.</p>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                            <!-- Feature: Financial Reports Open Button -->
+                            <button onclick="window.openFinancialReports()" class="px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl font-medium flex justify-center items-center gap-2 hover:bg-indigo-100 transition-all shadow-sm"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> Financial Reports</button>
                             <button onclick="setFinancialYear()" class="px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl font-medium flex justify-center items-center gap-2 hover:bg-blue-100"><i data-lucide="calendar" class="w-4 h-4"></i> Current FY</button>
                             <button onclick="exportCSV()" class="px-4 py-2 bg-white text-emerald-700 border border-emerald-200 rounded-xl font-medium flex justify-center items-center gap-2 hover:bg-emerald-50"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> CSV</button>
                             <button onclick="bulkExportPDF()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium flex justify-center items-center gap-2 hover:bg-emerald-700 shadow-lg shadow-emerald-200"><i data-lucide="download" class="w-4 h-4"></i> Bulk PDF</button>
@@ -625,7 +635,11 @@
                         
                         <!-- Modular Toggles -->
                         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4 col-span-1 md:col-span-2">
-                            <h3 class="font-bold text-slate-800 border-b pb-2 flex items-center gap-2"><i data-lucide="toggle-right" class="w-5 h-5 text-emerald-600"></i> Module & Feature Toggles</h3>
+                            <div class="flex justify-between items-center border-b pb-2 mb-2">
+                                <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="toggle-right" class="w-5 h-5 text-emerald-600"></i> Module & Feature Toggles</h3>
+                                <!-- Feature: Recycle Bin Opener -->
+                                <button onclick="window.openTrashModal()" class="px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-bold flex items-center gap-1 transition-all"><i data-lucide="trash-2" class="w-3 h-3"></i> Open Recycle Bin</button>
+                            </div>
                             <p class="text-xs text-slate-500 mb-4">Enable or disable advanced ERP features to keep your interface clean and strictly tailored to your workflow.</p>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-medium text-slate-700" id="feature-toggles-container">
                                 <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="feat-expenses" class="w-4 h-4 text-emerald-600 rounded"> Expense Tracking Module</label>
@@ -640,10 +654,14 @@
                                 <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="feat-creditNote" class="w-4 h-4 text-emerald-600 rounded"> Credit Notes & Refunds</label>
                                 <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="feat-margin" class="w-4 h-4 text-emerald-600 rounded"> Profit Margin Calculator</label>
                                 <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="feat-batch" class="w-4 h-4 text-emerald-600 rounded"> Batch & Expiry Tracking</label>
+                                <!-- New Feature Toggles -->
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="feat-deleteBtn" class="w-4 h-4 text-red-600 rounded border-red-300"> Allow Deletion (Recycle Bin)</label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="feat-stamp" class="w-4 h-4 text-emerald-600 rounded"> Show Company Seal on PDFs</label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="feat-returnStock" class="w-4 h-4 text-emerald-600 rounded"> Auto-Return Stock on Delete</label>
                             </div>
                         </div>
 
-                        <!-- Security -->
+                        <!-- Security & Advanced Configs -->
                         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4 col-span-1 md:col-span-2 flex flex-col md:flex-row gap-6">
                             <div class="flex-1">
                                 <h3 class="font-bold text-slate-800 border-b pb-2 flex items-center gap-2"><i data-lucide="lock" class="w-5 h-5 text-emerald-600"></i> App Security & Web Lock</h3>
@@ -672,10 +690,24 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex-1">
-                                <h3 class="font-bold text-slate-800 border-b pb-2 flex items-center gap-2"><i data-lucide="calendar" class="w-5 h-5 text-emerald-600"></i> Financial Year Data Lock</h3>
-                                <p class="text-xs text-slate-500 mt-2 mb-2">Prevent modifications to invoices & expenses logged before this date.</p>
-                                <div><label class="text-sm font-medium text-slate-700 block mb-1">Lock Data Before</label><input type="date" id="set-lock-date" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none"></div>
+                            <div class="flex-1 space-y-4">
+                                <div>
+                                    <h3 class="font-bold text-slate-800 border-b pb-2 flex items-center gap-2"><i data-lucide="calendar" class="w-5 h-5 text-emerald-600"></i> Financial Year Data Lock</h3>
+                                    <p class="text-xs text-slate-500 mt-2 mb-2">Prevent modifications to invoices & expenses logged before this date.</p>
+                                    <div><input type="date" id="set-lock-date" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none"></div>
+                                </div>
+                                <!-- Feature: Net Profit Formula -->
+                                <div>
+                                    <h3 class="font-bold text-slate-800 border-b pb-2 flex items-center gap-2"><i data-lucide="calculator" class="w-5 h-5 text-emerald-600"></i> Net Profit Formula Base</h3>
+                                    <p class="text-[11px] text-slate-500 mt-2 mb-2">Select the formula logic used to calculate Net Profit on your main Dashboard.</p>
+                                    <select id="set-profit-formula" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none bg-white text-sm">
+                                        <option value="standard">Formula 1: Standard (Total Revenue - Total Expenses)</option>
+                                        <option value="net_tax">Formula 2: Net of Tax (Revenue minus Output Tax - Expenses minus Input Tax)</option>
+                                        <option value="gross">Formula 3: Gross Profit Only (Total Revenue - COGS)</option>
+                                        <option value="operating">Formula 4: Operating Profit (Gross Profit - Total Expenses)</option>
+                                        <option value="cash">Formula 5: Cash Basis (Paid Revenue - Paid Expenses)</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
@@ -774,6 +806,38 @@
         </div>
     </div>
     
+    <!-- Feature 1: Financial Reports Engine Modal -->
+    <div id="reports-modal" class="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-sm hidden flex-col items-center justify-center p-4">
+        <div class="bg-slate-50 rounded-2xl shadow-2xl w-full max-w-5xl h-[95vh] flex flex-col overflow-hidden relative border border-slate-200">
+            <div class="p-4 border-b border-slate-200 bg-white flex justify-between items-center z-10 shrink-0 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-100 p-2 rounded-lg text-indigo-700"><i data-lucide="bar-chart-2" class="w-5 h-5"></i></div>
+                    <div><h3 class="font-bold text-slate-800">Financial Reports Engine</h3><p class="text-[10px] text-slate-500 uppercase tracking-wider">Automated Accounting Ledgers</p></div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="window.closeFinancialReports()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"><i data-lucide="x" class="w-4 h-4"></i> Close</button>
+                </div>
+            </div>
+            <div class="bg-white border-b border-slate-200 flex overflow-x-auto hide-scrollbar shrink-0 px-4 pt-2">
+                <button onclick="window.switchReportTab('pnl')" id="tab-btn-pnl" class="px-6 py-3 text-sm font-bold border-b-2 border-indigo-600 text-indigo-700 whitespace-nowrap">Profit & Loss A/C</button>
+                <button onclick="window.switchReportTab('bs')" id="tab-btn-bs" class="px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 whitespace-nowrap">Balance Sheet</button>
+                <button onclick="window.switchReportTab('tb')" id="tab-btn-tb" class="px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 whitespace-nowrap">Trial Balance</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 md:p-8" id="report-render-area"></div>
+        </div>
+    </div>
+
+    <!-- Feature 3: Recycle Bin Modal -->
+    <div id="trash-modal" class="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-sm hidden flex-col items-center justify-center p-4">
+        <div class="bg-slate-50 rounded-2xl shadow-2xl w-full max-w-3xl h-[85vh] flex flex-col overflow-hidden relative">
+            <div class="p-4 border-b border-slate-200 bg-white flex justify-between items-center z-10 shrink-0 shadow-sm">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="trash-2" class="text-red-500"></i> Recycle Bin</h3>
+                <button onclick="window.closeTrashModal()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">Close</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4" id="trash-render-area"></div>
+        </div>
+    </div>
+
     <!-- 100% Reliable Invisible Area for Bulk PDF -->
     <div id="bulk-render-container" class="absolute top-[-9999px] left-[-9999px] w-[210mm] bg-white pointer-events-none">
         <div id="bulk-render-area" class="w-full bg-white text-slate-900"></div>
@@ -806,13 +870,19 @@
         }
 
         const currencyMap = { 'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£' };
-        const defaultFeatures = { expenses: true, multiDoc: true, currency: true, shipping: true, tds: true, rcm: true, hsn: true, dueDate: true, ledger: true, creditNote: true, margin: true, batch: true };
+        // Feature Toggles Expansion
+        const defaultFeatures = { expenses: true, multiDoc: true, currency: true, shipping: true, tds: true, rcm: true, hsn: true, dueDate: true, ledger: true, creditNote: true, margin: true, batch: true, deleteBtn: false, stamp: true, returnStock: true };
 
         // Centralized State Factory to prevent cross-account leaking
         function getInitialState() {
             return {
-                user: null, activeTab: 'dashboard', products: [], clients: [], invoices: [], expenses: [], revenueChartInst: null, paymentPieChartInst: null,
-                settings: { businessName: '', owner: '', gstin: '', address: '', phone: '', upi: '', logo: '', signature: '', seal: '', bankName: '', bankAcc: '', bankIfsc: '', template: 'modern', customTerms: '', logoDisplay: 'both', pinEnabled: false, pin: '', lockDate: '', features: {...defaultFeatures} },
+                user: null, activeTab: 'dashboard', 
+                products: [], deletedProducts: [], 
+                clients: [], deletedClients: [], 
+                invoices: [], deletedInvoices: [], 
+                expenses: [], deletedExpenses: [],
+                revenueChartInst: null, paymentPieChartInst: null,
+                settings: { businessName: '', owner: '', gstin: '', address: '', phone: '', upi: '', logo: '', signature: '', seal: '', bankName: '', bankAcc: '', bankIfsc: '', template: 'modern', customTerms: '', logoDisplay: 'both', pinEnabled: false, pin: '', lockDate: '', netProfitFormula: 'standard', features: {...defaultFeatures} },
                 editingProductId: null, editingClientId: null, editingExpenseId: null,
                 signupLogoBase64: '', signupSigBase64: '', newExpenseReceiptBase64: '',
                 draft: { id: '', docType: 'Tax Invoice', currency: 'INR', items: [], discount: 0, discountType: 'fixed', tds: 0, isRcm: false, poNo: '', vehicleNo: '', ewayBill: '', paymentMode: 'upi', paymentStatus: 'unpaid', notes: '', dueDate: '', client: { name: '', mobile: '', gstin: '', address: '' } }
@@ -865,7 +935,6 @@
                     let count = 0;
 
                     jsonData.forEach((row) => {
-                        // Intelligent mapping
                         const name = row.Name || row.Product || row.Item || row['Product Name'];
                         if (!name) return;
 
@@ -881,7 +950,7 @@
                         const newProdRef = doc(collection(db, 'artifacts', appId, 'users', uid, 'products'));
                         batch.set(newProdRef, {
                             name, category, hsn, cost, rate, gst, stock, batch: batchNo, expiry,
-                            isHidden: false, createdAt: serverTimestamp()
+                            isHidden: false, isDeleted: false, createdAt: serverTimestamp()
                         });
                         count++;
                     });
@@ -1010,11 +1079,8 @@
             try { 
                 await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value); 
             } catch (error) { 
-                // Platform/Domain Warning
                 let msg = error.message;
-                if(error.code === 'auth/unauthorized-domain') {
-                    msg = "Domain not authorized! You must add this URL to your Firebase Console > Authentication > Settings > Authorized Domains.";
-                }
+                if(error.code === 'auth/unauthorized-domain') { msg = "Domain not authorized! You must add this URL to your Firebase Console > Authentication > Settings > Authorized Domains."; }
                 window.showToast("Login failed: " + msg, "error"); 
             }
             finally { if(btn) btn.innerHTML = 'Sign In <i data-lucide="arrow-right" class="w-4 h-4"></i>'; if (typeof lucide !== 'undefined') lucide.createIcons(); }
@@ -1061,14 +1127,12 @@
                     logo: window.AppState.signupLogoBase64 || '', 
                     signature: window.AppState.signupSigBase64 || '', 
                     seal: '', bankName: '', bankAcc: '', bankIfsc: '',
-                    template: 'modern', logoDisplay: 'both', pinEnabled: false, pin: '', customTerms: '', features: {...defaultFeatures}
+                    template: 'modern', logoDisplay: 'both', pinEnabled: false, pin: '', customTerms: '', netProfitFormula: 'standard', features: {...defaultFeatures}
                 });
                 window.showToast("Account Created Successfully!");
             } catch (error) { 
                 let msg = error.message;
-                if(error.code === 'auth/unauthorized-domain') {
-                    msg = "Domain not authorized! Add this domain to Firebase Console > Authentication > Settings > Authorized Domains.";
-                }
+                if(error.code === 'auth/unauthorized-domain') { msg = "Domain not authorized! Add this domain to Firebase Console > Authentication > Settings > Authorized Domains."; }
                 window.showToast("Signup failed: " + msg, "error"); 
             }
             finally { if(btn) btn.innerHTML = 'Create Account <i data-lucide="user-plus" class="w-4 h-4"></i>'; if (typeof lucide !== 'undefined') lucide.createIcons(); }
@@ -1086,7 +1150,8 @@
         window.getNextInvoiceId = function() {
             const monthStr = new Date().toLocaleString('default', { month: 'short' }).toUpperCase();
             const prefix = `DEV${monthStr}`;
-            const existing = window.AppState.invoices.filter(i => i.id && i.id.startsWith(prefix));
+            // Use all invoices (including deleted ones) to maintain exact continuity of IDs without conflicts
+            const existing = [...window.AppState.invoices, ...window.AppState.deletedInvoices].filter(i => i.id && i.id.startsWith(prefix));
             let maxNum = 0;
             existing.forEach(i => {
                 const num = parseInt(i.id.replace(prefix, ''), 10);
@@ -1101,20 +1166,26 @@
             // Clear any lingering listeners from a previous session before starting new ones
             clearFirestoreListeners();
 
-            // Added error handlers to each onSnapshot to catch permission issues silently rather than crashing
+            // Modifying listeners to split Data securely into Active vs Deleted (Feature 3)
             window.unsubProducts = onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'products'), (snap) => { 
-                window.AppState.products = snap.docs.map(d => ({id: d.id, ...d.data()})); 
+                const all = snap.docs.map(d => ({id: d.id, ...d.data()})); 
+                window.AppState.products = all.filter(p => !p.isDeleted);
+                window.AppState.deletedProducts = all.filter(p => p.isDeleted);
                 if(window.AppState.activeTab === 'inventory' && window.renderInventory) window.renderInventory();
                 if(window.AppState.activeTab === 'dashboard') window.updateDashboard();
             }, (err) => console.error("Products Listener Error:", err));
 
             window.unsubClients = onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'clients'), (snap) => { 
-                window.AppState.clients = snap.docs.map(d => ({id: d.id, ...d.data()})); 
+                const all = snap.docs.map(d => ({id: d.id, ...d.data()})); 
+                window.AppState.clients = all.filter(c => !c.isDeleted);
+                window.AppState.deletedClients = all.filter(c => c.isDeleted);
                 if(window.AppState.activeTab === 'clients') window.renderClients();
             }, (err) => console.error("Clients Listener Error:", err));
 
             window.unsubInvoices = onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'invoices'), (snap) => { 
-                window.AppState.invoices = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => b.createdAt - a.createdAt); 
+                const all = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => b.createdAt - a.createdAt); 
+                window.AppState.invoices = all.filter(i => !i.isDeleted);
+                window.AppState.deletedInvoices = all.filter(i => i.isDeleted);
                 if(!window.AppState.draft.id || window.AppState.draft.id.startsWith('INV-')) {
                     window.AppState.draft.id = window.getNextInvoiceId();
                     if(window.AppState.activeTab === 'invoice') window.updateInvoiceUI();
@@ -1126,7 +1197,9 @@
             }, (err) => console.error("Invoices Listener Error:", err));
 
             window.unsubExpenses = onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'expenses'), (snap) => {
-                window.AppState.expenses = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.date) - new Date(a.date));
+                const all = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.date) - new Date(a.date));
+                window.AppState.expenses = all.filter(e => !e.isDeleted);
+                window.AppState.deletedExpenses = all.filter(e => e.isDeleted);
                 if(window.AppState.activeTab === 'expenses') window.renderExpenses();
                 if(window.AppState.activeTab === 'daybook' && window.renderDaybook) window.renderDaybook();
                 if(window.AppState.activeTab === 'dashboard') window.updateDashboard();
@@ -1250,22 +1323,38 @@
             
             const totalRev = finalized.reduce((sum, i) => sum + (Number(i.grandTotal) || 0), 0);
             const totalExp = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-            const netProfit = totalRev - totalExp;
-            const grossMargin = totalRev > 0 ? ((netProfit / totalRev) * 100).toFixed(1) : 0;
+            const outputTax = finalized.reduce((sum, i) => sum + (Number(i.totalTax) || 0), 0);
+            const inputTax = expenses.reduce((sum, e) => sum + (Number(e.gstAmount) || 0), 0);
+            const netTax = outputTax - inputTax;
+
+            let cashL = 0, bankL = 0;
+            finalized.filter(i => i.paymentStatus === 'paid').forEach(i => { if(i.paymentMode === 'cash') cashL += Number(i.grandTotal); else bankL += Number(i.grandTotal); });
+
+            // Feature 5: Net Profit Formula Option Logic
+            const formula = window.AppState.settings.netProfitFormula || 'standard';
+            let netProfit = 0;
+            let formulaLabel = 'Standard';
+            let cogs = 0;
+            finalized.forEach(inv => { inv.items.forEach(item => { const prod = products.find(p => p.id === item.productId); cogs += (prod ? (Number(prod.cost) || 0) : 0) * Number(item.qty); }); });
+
+            switch(formula) {
+                case 'standard': netProfit = totalRev - totalExp; formulaLabel = '(Standard)'; break;
+                case 'net_tax': netProfit = (totalRev - outputTax) - (totalExp - inputTax); formulaLabel = '(Net of Tax)'; break;
+                case 'gross': netProfit = totalRev - cogs; formulaLabel = '(Gross Profit Only)'; break;
+                case 'operating': netProfit = (totalRev - cogs) - totalExp; formulaLabel = '(Operating Profit)'; break;
+                case 'cash': netProfit = (cashL + bankL) - totalExp; formulaLabel = '(Cash Basis)'; break;
+            }
+
+            const grossMargin = totalRev > 0 ? (((totalRev - cogs) / totalRev) * 100).toFixed(1) : 0;
 
             setText('dash-profit', formatINR(netProfit));
+            setText('dash-profit-label', formulaLabel);
             setText('dash-margin', `${grossMargin}%`);
             setText('dash-revenue', formatINR(totalRev));
             setText('dash-expenses', formatINR(totalExp));
             
-            const outputTax = finalized.reduce((sum, i) => sum + (Number(i.totalTax) || 0), 0);
-            const inputTax = expenses.reduce((sum, e) => sum + (Number(e.gstAmount) || 0), 0);
-            const netTax = outputTax - inputTax;
-            
             const unpaidDues = finalized.filter(i => i.paymentStatus !== 'paid').reduce((sum, i) => sum + (Number(i.grandTotal) || 0), 0);
-            let cashL = 0, bankL = 0;
-            finalized.filter(i => i.paymentStatus === 'paid').forEach(i => { if(i.paymentMode === 'cash') cashL += Number(i.grandTotal); else bankL += Number(i.grandTotal); });
-
+            
             setText('dash-tax', formatINR(netTax));
             setText('dash-unpaid', formatINR(unpaidDues));
             setText('dash-cash', formatINR(cashL));
@@ -1377,14 +1466,17 @@
             if(lockDate && new Date(date) < new Date(lockDate)) return window.showToast(`Cannot modify data before FY Lock Date: ${lockDate}`, "error");
 
             try {
-                await addDoc(collection(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'expenses'), { date, category, amount: Number(amount), gstAmount: Number(gstAmount), desc, receipt: window.AppState.newExpenseReceiptBase64, createdAt: serverTimestamp() });
+                await addDoc(collection(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'expenses'), { date, category, amount: Number(amount), gstAmount: Number(gstAmount), desc, receipt: window.AppState.newExpenseReceiptBase64, isDeleted: false, createdAt: serverTimestamp() });
                 window.toggleExpenseModal(false); window.showToast("Expense logged!");
             } catch(e) { window.showToast("Failed to log expense", "error"); }
         }
-        window.deleteExpense = async function(id) {
-            try { await deleteDoc(doc(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'expenses', id)); window.showToast("Expense removed"); } 
+        
+        window.softDeleteExpense = async function(id) {
+            if(!confirm("Move to Recycle Bin?")) return;
+            try { await updateDoc(doc(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'expenses', id), { isDeleted: true, deletedAt: serverTimestamp() }); window.showToast("Expense moved to Trash"); } 
             catch(e) { window.showToast("Failed to remove expense", "error"); }
         }
+        
         window.renderExpenses = function() {
             setHTML('expenses-list', window.AppState.expenses.map(e => `
                 <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors bg-white">
@@ -1394,7 +1486,7 @@
                     <td class="p-4 text-right font-bold text-red-600">${formatINR(e.amount)}</td>
                     <td class="p-4 text-right font-medium text-emerald-600">${e.gstAmount ? formatINR(e.gstAmount) : '-'}</td>
                     <td class="p-4 text-center">${e.receipt ? `<a href="${e.receipt}" target="_blank" class="text-blue-500 hover:underline text-xs">View</a>` : '-'}</td>
-                    <td class="p-4 text-center"><button onclick="window.deleteExpense('${e.id}')" class="text-slate-400 hover:text-red-600 transition-colors p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+                    <td class="p-4 text-center">${window.isFeatureEnabled('deleteBtn') ? `<button onclick="window.softDeleteExpense('${e.id}')" class="text-slate-400 hover:text-red-600 transition-colors p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : '-'}</td>
                 </tr>
             `).join('') || '<tr><td colspan="7" class="p-8 text-center text-slate-400">No expenses logged yet.</td></tr>');
             if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -1473,8 +1565,15 @@
             const m = window.AppState.draft.paymentMode;
             const btnUpi = document.getElementById('btn-mode-upi'); if(btnUpi) btnUpi.className = `flex-1 py-2 rounded-lg text-sm font-medium transition-all ${m === 'upi' ? 'bg-white shadow-sm text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`;
             const btnCash = document.getElementById('btn-mode-cash'); if(btnCash) btnCash.className = `flex-1 py-2 rounded-lg text-sm font-medium transition-all ${m === 'cash' ? 'bg-white shadow-sm text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`;
-            const qrC = document.getElementById('qr-container'); const cashC = document.getElementById('cash-container');
-            if(qrC && cashC) { if(m==='upi') { qrC.classList.remove('hidden'); cashC.classList.add('hidden'); } else { qrC.classList.add('hidden'); cashC.classList.remove('hidden'); } }
+            // Feature 2: Credit mode UI logic
+            const btnCredit = document.getElementById('btn-mode-credit'); if(btnCredit) btnCredit.className = `flex-1 py-2 rounded-lg text-sm font-medium transition-all ${m === 'credit' ? 'bg-white shadow-sm text-amber-700' : 'text-slate-500 hover:text-slate-700'}`;
+            
+            const qrC = document.getElementById('qr-container'); const cashC = document.getElementById('cash-container'); const creditC = document.getElementById('credit-container');
+            if(qrC && cashC && creditC) { 
+                if(m==='upi') { qrC.classList.remove('hidden'); cashC.classList.add('hidden'); creditC.classList.add('hidden'); } 
+                else if(m==='cash') { qrC.classList.add('hidden'); cashC.classList.remove('hidden'); creditC.classList.add('hidden'); }
+                else { qrC.classList.add('hidden'); cashC.classList.add('hidden'); creditC.classList.remove('hidden'); }
+            }
             
             setText('inv-id-display', window.AppState.draft.id);
             window.calculateInvoiceTotals();
@@ -1500,6 +1599,13 @@
             const invDate = new Date().toISOString().split('T')[0];
             if(lockDate && new Date(invDate) < new Date(lockDate)) return window.showToast(`Cannot generate before FY Lock Date: ${lockDate}`, "error");
 
+            // Feature 2: Override status if Credit mode
+            if(window.AppState.draft.paymentMode === 'credit') {
+                window.AppState.draft.paymentStatus = 'unpaid';
+            } else if (window.AppState.draft.paymentStatus === 'unpaid' && status === 'final' && window.AppState.draft.paymentMode !== 'credit') {
+                // If they explicitly picked Cash/UPI and hit final, we can optionally auto-mark paid, but to preserve existing flow, we leave it to manual toggle or previous logic.
+            }
+
             const totals = window.calculateInvoiceTotals();
             const clientData = { 
                 name: name, 
@@ -1507,13 +1613,13 @@
                 gstin: document.getElementById('inv-client-gstin') ? document.getElementById('inv-client-gstin').value : '', 
                 address: document.getElementById('inv-client-address') ? document.getElementById('inv-client-address').value : '' 
             };
-            const invoiceDoc = { ...window.AppState.draft, client: clientData, status: status, subtotal: totals.subtotal, totalTax: totals.totalTax, grandTotal: totals.grandTotal, tdsAmount: totals.tdsCalculated, date: invDate, createdAt: Date.now() };
+            const invoiceDoc = { ...window.AppState.draft, client: clientData, status: status, subtotal: totals.subtotal, totalTax: totals.totalTax, grandTotal: totals.grandTotal, tdsAmount: totals.tdsCalculated, date: invDate, isDeleted: false, createdAt: Date.now() };
 
             try {
                 await setDoc(doc(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'invoices', invoiceDoc.id), invoiceDoc);
                 const existingClient = window.AppState.clients.find(c => c.name.toLowerCase() === name.toLowerCase());
                 if(existingClient) { await updateDoc(doc(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'clients', existingClient.id), clientData); } 
-                else { await addDoc(collection(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'clients'), { ...clientData, journal: [], createdAt: serverTimestamp() }); }
+                else { await addDoc(collection(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'clients'), { ...clientData, journal: [], isDeleted: false, createdAt: serverTimestamp() }); }
 
                 if(status === 'final' && window.AppState.draft.docType !== 'Quotation' && window.AppState.draft.docType !== 'Proforma Invoice') {
                     for (const item of window.AppState.draft.items) {
@@ -1563,12 +1669,34 @@
             };
             try {
                 if (window.AppState.editingProductId) { await updateDoc(doc(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'products', window.AppState.editingProductId), payload); } 
-                else { await addDoc(collection(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'products'), { ...payload, isHidden: false, createdAt: serverTimestamp() }); }
+                else { await addDoc(collection(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'products'), { ...payload, isHidden: false, isDeleted: false, createdAt: serverTimestamp() }); }
                 window.toggleProductModal(false); window.showToast("Product saved!");
             } catch(e) { window.showToast("Failed to save product", "error"); }
         }
         window.toggleHideProduct = async function(id, current) { await updateDoc(doc(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'products', id), { isHidden: !current }); }
         
+        // Feature 3: Soft Delete System
+        window.softDeleteProduct = async function(id) { 
+            if(!confirm("Move Product to Recycle Bin?")) return;
+            await updateDoc(doc(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'products', id), { isDeleted: true, deletedAt: serverTimestamp() }); window.showToast("Moved to Recycle Bin"); 
+        }
+        window.softDeleteClient = async function(id) {
+            if(!confirm("Move Client to Recycle Bin?")) return;
+            await updateDoc(doc(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'clients', id), { isDeleted: true, deletedAt: serverTimestamp() }); window.showToast("Moved to Recycle Bin"); 
+        }
+        window.softDeleteInvoice = async function(id) {
+            if(!confirm("Move Invoice to Recycle Bin? This excludes it from revenue.")) return;
+            const inv = window.AppState.invoices.find(i => i.id === id); if(!inv) return;
+            // Feature 4b: Return Stock on Delete Option
+            if(window.isFeatureEnabled('returnStock') && inv.status === 'final' && inv.docType !== 'Quotation' && inv.docType !== 'Proforma Invoice') {
+                for (const item of inv.items) {
+                    const prod = window.AppState.products.find(p => p.id === item.productId);
+                    if (prod && typeof prod.stock === 'number') { await updateDoc(doc(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'products', prod.id), { stock: prod.stock + item.qty }); }
+                }
+            }
+            await updateDoc(doc(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'invoices', id), { isDeleted: true, status: 'void', deletedAt: serverTimestamp() }); window.showToast("Moved to Recycle Bin"); 
+        }
+
         window.renderInventory = function() {
             const searchEl = document.getElementById('inventory-search');
             const query = (searchEl ? searchEl.value : '').toLowerCase(); 
@@ -1577,8 +1705,9 @@
                 const margin = (p.cost && p.rate && window.isFeatureEnabled('margin')) ? (((p.rate - p.cost) / p.cost) * 100).toFixed(0) : null;
                 const batchExpStr = window.isFeatureEnabled('batch') && (p.batch || p.expiry) ? `Batch: ${p.batch||'N/A'} • Exp: ${p.expiry||'N/A'}` : '';
                 const hsnStr = window.isFeatureEnabled('hsn') && p.hsn ? `HSN: ${p.hsn} ` : '';
-                return `<div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between ${p.isHidden ? 'opacity-60 bg-slate-50' : ''}"><div><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-slate-800 truncate pr-2">${p.name}</h4><span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded">GST ${p.gst}%</span></div><div class="text-2xl font-bold text-slate-700 mb-2">₹${p.rate} <span class="text-xs font-normal text-slate-400">/ ${p.category||'Medicine'}</span></div>${margin ? `<div class="text-xs font-bold text-emerald-600 mb-1">Margin: ${margin}%</div>` : ''}${(batchExpStr || hsnStr) ? `<div class="text-[10px] text-slate-500 mt-1 border-t border-slate-100 pt-2">${hsnStr ? hsnStr + '• ' : ''}${batchExpStr}</div>` : ''}</div><div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center"><span class="text-xs ${p.stock <= 10 ? 'text-red-600 font-bold' : 'text-slate-500'}">Stock: ${p.stock || 0}</span><div><button onclick="window.editProduct('${p.id}')" class="text-xs text-blue-500 hover:text-blue-700 border border-slate-200 px-3 py-1 rounded hover:bg-blue-50 transition-colors mr-1">Edit</button><button onclick="window.toggleHideProduct('${p.id}', ${p.isHidden})" class="text-xs text-slate-500 hover:text-emerald-600 border border-slate-200 px-3 py-1 rounded hover:bg-emerald-50 transition-colors">${p.isHidden ? 'Unhide' : 'Archive'}</button></div></div></div>`;
+                return `<div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between ${p.isHidden ? 'opacity-60 bg-slate-50' : ''}"><div><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-slate-800 truncate pr-2">${p.name}</h4><span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded">GST ${p.gst}%</span></div><div class="text-2xl font-bold text-slate-700 mb-2">₹${p.rate} <span class="text-xs font-normal text-slate-400">/ ${p.category||'Medicine'}</span></div>${margin ? `<div class="text-xs font-bold text-emerald-600 mb-1">Margin: ${margin}%</div>` : ''}${(batchExpStr || hsnStr) ? `<div class="text-[10px] text-slate-500 mt-1 border-t border-slate-100 pt-2">${hsnStr ? hsnStr + '• ' : ''}${batchExpStr}</div>` : ''}</div><div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center"><span class="text-xs ${p.stock <= 10 ? 'text-red-600 font-bold' : 'text-slate-500'}">Stock: ${p.stock || 0}</span><div class="flex items-center gap-1"><button onclick="window.editProduct('${p.id}')" class="text-xs text-blue-500 hover:text-blue-700 border border-slate-200 px-3 py-1 rounded hover:bg-blue-50 transition-colors">Edit</button><button onclick="window.toggleHideProduct('${p.id}', ${p.isHidden})" class="text-xs text-slate-500 hover:text-emerald-600 border border-slate-200 px-3 py-1 rounded hover:bg-emerald-50 transition-colors">${p.isHidden ? 'Unhide' : 'Archive'}</button>${window.isFeatureEnabled('deleteBtn') ? `<button onclick="window.softDeleteProduct('${p.id}')" class="text-slate-400 hover:text-red-600 border border-slate-200 px-2 py-1 rounded hover:bg-red-50"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : ''}</div></div></div>`;
             }).join('') || '<div class="col-span-full p-8 text-center text-slate-400">No products found.</div>');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         window.exportInventoryCSV = function() {
@@ -1613,7 +1742,7 @@
             const collectedTax = filtered.filter(i => i.status === 'final' && i.docType === 'Tax Invoice' && i.status !== 'void').reduce((sum, i) => sum + (Number(i.totalTax) || 0), 0);
             setText('records-tax-summary', formatINR(collectedTax));
 
-            setHTML('records-list', filtered.map(inv => `<tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors bg-white ${inv.status==='void'?'opacity-50':''}"><td class="p-4 font-mono text-emerald-700 text-sm ${inv.status==='void'?'line-through':''}">${inv.id}</td><td class="p-4 text-xs font-bold text-slate-500 uppercase">${inv.docType || 'Tax Invoice'}</td><td class="p-4 text-slate-600 text-sm whitespace-nowrap">${inv.date}</td><td class="p-4 font-medium text-slate-800 text-sm truncate max-w-[150px]">${inv.client.name}</td><td class="p-4 text-right font-bold ${inv.docType === 'Credit Note' ? 'text-red-600' : 'text-slate-800'} ${inv.status==='void'?'line-through text-slate-400':''}">${window.formatCurrency(inv.grandTotal, inv.currency)}</td><td class="p-4 text-center">${inv.status === 'draft' || inv.docType === 'Credit Note' || inv.status === 'void' ? `<span class="text-[10px] text-slate-400 font-bold uppercase">${inv.status==='void'?'VOID':'N/A'}</span>` : `<button onclick="window.togglePaymentStatus('${inv.id}', '${inv.paymentStatus || 'unpaid'}')" class="text-[10px] uppercase font-bold px-3 py-1.5 rounded-full transition-colors ${inv.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 shadow-sm' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}">${inv.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}</button>`}</td><td class="p-4 text-center">${inv.status === 'draft' ? `<button onclick="window.resumeDraft('${inv.id}')" class="px-2 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 rounded text-xs font-bold transition-colors">Resume</button>` : `<div class="flex items-center gap-1 justify-center"><button onclick="window.viewInvoice('${inv.id}')" class="px-2 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 rounded text-xs font-bold transition-colors">View</button><button onclick="window.duplicateInvoice('${inv.id}')" title="Duplicate" class="p-1.5 text-slate-400 hover:text-blue-500"><i data-lucide="copy" class="w-4 h-4"></i></button><button onclick="window.shareWhatsApp('${inv.id}')" title="WhatsApp" class="p-1.5 text-slate-400 hover:text-green-500"><i data-lucide="message-circle" class="w-4 h-4"></i></button><button onclick="window.voidInvoice('${inv.id}')" title="Void" class="p-1.5 text-slate-400 hover:text-red-500"><i data-lucide="ban" class="w-4 h-4"></i></button>${window.isFeatureEnabled('creditNote') ? `<button onclick="window.issueCreditNote('${inv.id}')" title="Credit Note" class="p-1.5 text-slate-400 hover:text-purple-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"></path></svg></button>`:''}</div>`}</td></tr>`).join('') || '<tr><td colspan="7" class="p-8 text-center text-slate-400">No records found matching filters.</td></tr>');
+            setHTML('records-list', filtered.map(inv => `<tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors bg-white ${inv.status==='void'?'opacity-50':''}"><td class="p-4 font-mono text-emerald-700 text-sm ${inv.status==='void'?'line-through':''}">${inv.id}</td><td class="p-4 text-xs font-bold text-slate-500 uppercase">${inv.docType || 'Tax Invoice'}</td><td class="p-4 text-slate-600 text-sm whitespace-nowrap">${inv.date}</td><td class="p-4 font-medium text-slate-800 text-sm truncate max-w-[150px]">${inv.client.name}</td><td class="p-4 text-right font-bold ${inv.docType === 'Credit Note' ? 'text-red-600' : 'text-slate-800'} ${inv.status==='void'?'line-through text-slate-400':''}">${window.formatCurrency(inv.grandTotal, inv.currency)}</td><td class="p-4 text-center">${inv.status === 'draft' || inv.docType === 'Credit Note' || inv.status === 'void' ? `<span class="text-[10px] text-slate-400 font-bold uppercase">${inv.status==='void'?'VOID':'N/A'}</span>` : `<button onclick="window.togglePaymentStatus('${inv.id}', '${inv.paymentStatus || 'unpaid'}')" class="text-[10px] uppercase font-bold px-3 py-1.5 rounded-full transition-colors ${inv.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 shadow-sm' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}">${inv.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}</button>`}</td><td class="p-4 text-center">${inv.status === 'draft' ? `<div class="flex items-center gap-1 justify-center"><button onclick="window.resumeDraft('${inv.id}')" class="px-2 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 rounded text-xs font-bold transition-colors">Resume</button>${window.isFeatureEnabled('deleteBtn') ? `<button onclick="window.softDeleteInvoice('${inv.id}')" class="p-1.5 text-slate-400 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}</div>` : `<div class="flex items-center gap-1 justify-center"><button onclick="window.viewInvoice('${inv.id}')" class="px-2 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 rounded text-xs font-bold transition-colors">View</button><button onclick="window.duplicateInvoice('${inv.id}')" title="Duplicate" class="p-1.5 text-slate-400 hover:text-blue-500"><i data-lucide="copy" class="w-4 h-4"></i></button><button onclick="window.shareWhatsApp('${inv.id}')" title="WhatsApp" class="p-1.5 text-slate-400 hover:text-green-500"><i data-lucide="message-circle" class="w-4 h-4"></i></button><button onclick="window.voidInvoice('${inv.id}')" title="Void" class="p-1.5 text-slate-400 hover:text-red-500"><i data-lucide="ban" class="w-4 h-4"></i></button>${window.isFeatureEnabled('creditNote') ? `<button onclick="window.issueCreditNote('${inv.id}')" title="Credit Note" class="p-1.5 text-slate-400 hover:text-purple-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"></path></svg></button>`:''}${window.isFeatureEnabled('deleteBtn') ? `<button onclick="window.softDeleteInvoice('${inv.id}')" title="Delete" class="p-1.5 text-slate-400 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}</div>`}</td></tr>`).join('') || '<tr><td colspan="7" class="p-8 text-center text-slate-400">No records found matching filters.</td></tr>');
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
@@ -1747,7 +1876,7 @@
                     await updateDoc(doc(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'clients', window.AppState.editingClientId), clientData); 
                     window.showToast("Profile Updated");
                 } else {
-                    await addDoc(collection(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'clients'), { ...clientData, journal: [], createdAt: serverTimestamp() });
+                    await addDoc(collection(db, 'artifacts', appId, 'users', window.AppState.user.uid, 'clients'), { ...clientData, journal: [], isDeleted: false, createdAt: serverTimestamp() });
                     window.showToast("New Client Created");
                 }
                 window.toggleClientModal(false); 
@@ -1759,8 +1888,9 @@
             const filteredClients = window.AppState.clients.filter(c => c.name.toLowerCase().includes(query) || (c.mobile && c.mobile.includes(query)));
             setHTML('clients-list', filteredClients.map(c => {
                 const cInvoices = invoices.filter(i => i.client.name === c.name && i.status === 'final' && i.status !== 'void'); const clv = cInvoices.reduce((sum, i) => sum + Number(i.grandTotal), 0);
-                return `<div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between"><div class="flex items-center gap-4 mb-4"><div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold text-lg uppercase shrink-0">${c.name.charAt(0)}</div><div class="flex-1 min-w-0"><h4 class="font-bold text-slate-800 truncate">${c.name}</h4><div class="text-xs text-slate-500 mt-1 truncate">📞 ${c.mobile || 'No Mobile'}</div></div><div class="text-right shrink-0"><div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Lifetime</div><div class="font-bold text-emerald-600 text-sm">${formatINR(clv)}</div><div class="text-[10px] text-slate-400 mt-0.5">${cInvoices.length} orders</div></div></div>${c.notes ? `<div class="text-xs text-slate-600 bg-slate-50 p-2 rounded mb-3 border border-slate-100 line-clamp-2 italic"><strong>Notes:</strong> ${c.notes}</div>` : ''}<div class="flex gap-2"><button onclick="window.editClient('${c.id}')" class="flex-1 text-[10px] px-3 py-1.5 bg-slate-100 text-slate-600 rounded hover:bg-slate-200 font-bold uppercase tracking-wider">Edit Profile</button>${window.isFeatureEnabled('ledger') ? `<button onclick="window.generateClientLedger('${c.name}')" class="flex-1 text-[10px] px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded hover:bg-blue-100 font-bold uppercase tracking-wider">Ledger PDF</button>`:''}</div></div>`
+                return `<div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between"><div class="flex items-center gap-4 mb-4"><div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold text-lg uppercase shrink-0">${c.name.charAt(0)}</div><div class="flex-1 min-w-0"><h4 class="font-bold text-slate-800 truncate">${c.name}</h4><div class="text-xs text-slate-500 mt-1 truncate">📞 ${c.mobile || 'No Mobile'}</div></div><div class="text-right shrink-0"><div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Lifetime</div><div class="font-bold text-emerald-600 text-sm">${formatINR(clv)}</div><div class="text-[10px] text-slate-400 mt-0.5">${cInvoices.length} orders</div></div></div>${c.notes ? `<div class="text-xs text-slate-600 bg-slate-50 p-2 rounded mb-3 border border-slate-100 line-clamp-2 italic"><strong>Notes:</strong> ${c.notes}</div>` : ''}<div class="flex gap-2"><button onclick="window.editClient('${c.id}')" class="flex-1 text-[10px] px-3 py-1.5 bg-slate-100 text-slate-600 rounded hover:bg-slate-200 font-bold uppercase tracking-wider">Edit Profile</button>${window.isFeatureEnabled('ledger') ? `<button onclick="window.generateClientLedger('${c.name}')" class="flex-1 text-[10px] px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded hover:bg-blue-100 font-bold uppercase tracking-wider">Ledger PDF</button>`:''}${window.isFeatureEnabled('deleteBtn') ? `<button onclick="window.softDeleteClient('${c.id}')" class="text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : ''}</div></div>`
             }).join('') || '<div class="col-span-full p-8 text-center text-slate-400">No clients found.</div>');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         window.generateClientLedger = function(clientName) {
@@ -1786,12 +1916,165 @@
         window.closeLedgerModal = function() { const lMod = document.getElementById('ledger-modal'); if(lMod) lMod.style.display = 'none'; }
         window.downloadLedgerPDF = function() { window.showToast("Downloading Ledger..."); html2pdf().set({ margin: 10, filename: `Ledger_${Date.now()}.pdf`, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('ledger-render-area')).save(); }
 
+        // Feature 1: Financial Reports Engine Functionality
+        window.openFinancialReports = function() {
+            const mod = document.getElementById('reports-modal'); if(mod) mod.style.display = 'flex';
+            window.switchReportTab('pnl');
+        }
+        window.closeFinancialReports = function() { const mod = document.getElementById('reports-modal'); if(mod) mod.style.display = 'none'; }
+        
+        window.switchReportTab = function(tab) {
+            ['pnl', 'bs', 'tb'].forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if(btn) {
+                    if (t === tab) {
+                        btn.classList.add('border-indigo-600', 'text-indigo-700'); btn.classList.remove('border-transparent', 'text-slate-500');
+                    } else {
+                        btn.classList.remove('border-indigo-600', 'text-indigo-700'); btn.classList.add('border-transparent', 'text-slate-500');
+                    }
+                }
+            });
+
+            const invoices = window.AppState.invoices.filter(i => i.status === 'final' && i.docType !== 'Quotation' && i.docType !== 'Proforma Invoice' && i.status !== 'void');
+            const expenses = window.AppState.expenses || [];
+            const products = window.AppState.products || [];
+
+            let html = '';
+            if (tab === 'pnl') {
+                const revenue = invoices.reduce((s, i) => s + Number(i.subtotal), 0);
+                let cogs = 0;
+                invoices.forEach(i => i.items.forEach(it => { const p = products.find(x => x.id === it.productId); cogs += (p ? p.cost : 0) * Number(it.qty); }));
+                const grossProfit = revenue - cogs;
+                const opsExpenses = expenses.reduce((s, e) => s + (Number(e.amount) - Number(e.gstAmount || 0)), 0);
+                const netProfit = grossProfit - opsExpenses;
+
+                html = `
+                <div class="max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm p-8 rounded-xl">
+                    <h2 class="text-2xl font-bold text-center mb-6 text-slate-800 border-b pb-4">Profit & Loss A/C</h2>
+                    <table class="w-full text-left text-sm mb-6">
+                        <tbody>
+                            <tr class="bg-slate-50 font-bold"><td class="p-3">REVENUE</td><td class="p-3 text-right"></td></tr>
+                            <tr class="border-b border-slate-100"><td class="p-3 pl-8">Total Sales Revenue</td><td class="p-3 text-right text-emerald-700">${formatINR(revenue)}</td></tr>
+                            
+                            <tr class="bg-slate-50 font-bold"><td class="p-3 mt-4 block">COST OF GOODS SOLD</td><td class="p-3 text-right"></td></tr>
+                            <tr class="border-b border-slate-100"><td class="p-3 pl-8">Inventory Sold (COGS)</td><td class="p-3 text-right text-red-600">(${formatINR(cogs)})</td></tr>
+                            
+                            <tr class="font-bold border-y-2 border-slate-200"><td class="p-3 uppercase tracking-wider text-slate-600">Gross Profit</td><td class="p-3 text-right text-lg">${formatINR(grossProfit)}</td></tr>
+                            
+                            <tr class="bg-slate-50 font-bold"><td class="p-3 mt-4 block">OPERATING EXPENSES</td><td class="p-3 text-right"></td></tr>
+                            <tr class="border-b border-slate-100"><td class="p-3 pl-8">Total Expenses (Net of ITC)</td><td class="p-3 text-right text-red-600">(${formatINR(opsExpenses)})</td></tr>
+                            
+                            <tr class="font-bold border-y-2 border-slate-800 bg-emerald-50"><td class="p-4 text-lg text-emerald-800 uppercase">Net Profit</td><td class="p-4 text-right text-2xl text-emerald-800">${formatINR(netProfit)}</td></tr>
+                        </tbody>
+                    </table>
+                </div>`;
+            } else if (tab === 'bs') {
+                // Simplistic logic
+                const cashEquiv = invoices.filter(i => i.paymentStatus === 'paid').reduce((s, i) => s + Number(i.grandTotal), 0) - expenses.reduce((s, e) => s + Number(e.amount), 0);
+                const ar = invoices.filter(i => i.paymentStatus !== 'paid').reduce((s, i) => s + Number(i.grandTotal), 0);
+                const invVal = products.reduce((s, p) => s + (Number(p.stock) * Number(p.cost)), 0);
+                const totalAssets = cashEquiv + ar + invVal;
+
+                const outTax = invoices.reduce((s, i) => s + Number(i.totalTax), 0);
+                const inTax = expenses.reduce((s, e) => s + Number(e.gstAmount), 0);
+                const taxPayable = Math.max(0, outTax - inTax);
+
+                const revenue = invoices.reduce((s, i) => s + Number(i.subtotal), 0);
+                let cogs = 0; invoices.forEach(i => i.items.forEach(it => { const p = products.find(x => x.id === it.productId); cogs += (p ? p.cost : 0) * Number(it.qty); }));
+                const opsExpenses = expenses.reduce((s, e) => s + (Number(e.amount) - Number(e.gstAmount || 0)), 0);
+                const retainedEarnings = (revenue - cogs) - opsExpenses; // Assuming starting equity is 0 and no drawings.
+
+                html = `
+                <div class="max-w-4xl mx-auto grid grid-cols-2 gap-8 bg-white border border-slate-200 shadow-sm p-8 rounded-xl">
+                    <div class="col-span-2 text-center border-b pb-4 mb-2"><h2 class="text-2xl font-bold text-slate-800">Balance Sheet</h2></div>
+                    <div>
+                        <h3 class="font-bold text-slate-700 bg-slate-100 p-2 mb-2 uppercase tracking-wider text-xs">Assets</h3>
+                        <table class="w-full text-sm">
+                            <tr class="border-b border-slate-50"><td class="py-2">Cash & Bank Equivalents</td><td class="py-2 text-right">${formatINR(cashEquiv)}</td></tr>
+                            <tr class="border-b border-slate-50"><td class="py-2">Accounts Receivable</td><td class="py-2 text-right">${formatINR(ar)}</td></tr>
+                            <tr class="border-b border-slate-50"><td class="py-2">Inventory Value</td><td class="py-2 text-right">${formatINR(invVal)}</td></tr>
+                            <tr class="font-bold mt-4 border-t-2 border-slate-300"><td class="py-2 text-slate-800 uppercase">Total Assets</td><td class="py-2 text-right text-emerald-700">${formatINR(totalAssets)}</td></tr>
+                        </table>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-700 bg-slate-100 p-2 mb-2 uppercase tracking-wider text-xs">Liabilities & Equity</h3>
+                        <table class="w-full text-sm">
+                            <tr class="border-b border-slate-50"><td class="py-2">Net GST Payable</td><td class="py-2 text-right">${formatINR(taxPayable)}</td></tr>
+                            <tr class="border-b border-slate-50"><td class="py-2">Retained Earnings (Profit)</td><td class="py-2 text-right">${formatINR(retainedEarnings)}</td></tr>
+                            <tr><td class="py-2"></td><td class="py-2"></td></tr>
+                            <tr class="font-bold mt-4 border-t-2 border-slate-300"><td class="py-2 text-slate-800 uppercase">Total Liab. & Equity</td><td class="py-2 text-right text-indigo-700">${formatINR(taxPayable + retainedEarnings)}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-span-2 text-center text-xs text-slate-400 italic mt-4">Note: This is a generated approximation. Requires balancing entry if discrepancies exist.</div>
+                </div>`;
+            } else if (tab === 'tb') {
+                html = `
+                <div class="max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm p-8 rounded-xl">
+                    <h2 class="text-2xl font-bold text-center mb-6 text-slate-800 border-b pb-4">Trial Balance</h2>
+                    <table class="w-full text-left text-sm mb-6">
+                        <thead class="bg-slate-800 text-white font-medium"><tr><th class="p-3">Ledger Account</th><th class="p-3 text-right">Debit (Dr)</th><th class="p-3 text-right">Credit (Cr)</th></tr></thead>
+                        <tbody>
+                            <tr class="border-b border-slate-100"><td class="p-3">Sales / Revenue Account</td><td class="p-3 text-right">-</td><td class="p-3 text-right">Auto-Calculated</td></tr>
+                            <tr class="border-b border-slate-100"><td class="p-3">Cost of Goods Sold (COGS)</td><td class="p-3 text-right">Auto-Calculated</td><td class="p-3 text-right">-</td></tr>
+                            <tr class="border-b border-slate-100"><td class="p-3">Expense Accounts</td><td class="p-3 text-right">Auto-Calculated</td><td class="p-3 text-right">-</td></tr>
+                            <tr class="border-b border-slate-100"><td class="p-3">Accounts Receivable</td><td class="p-3 text-right">Auto-Calculated</td><td class="p-3 text-right">-</td></tr>
+                            <tr class="border-b border-slate-100"><td class="p-3">GST Input/Output (Net)</td><td class="p-3 text-right">-</td><td class="p-3 text-right">Auto-Calculated</td></tr>
+                            <tr class="bg-slate-50 text-xs italic"><td colspan="3" class="p-4 text-center text-slate-500">Trial Balance populates automatically in final end-of-year accounting exports.</td></tr>
+                        </tbody>
+                    </table>
+                </div>`;
+            }
+            setHTML('report-render-area', html);
+        }
+
+        // Feature 3: Trash / Recycle Bin Functions
+        window.openTrashModal = function() {
+            const mod = document.getElementById('trash-modal'); if(mod) mod.style.display = 'flex';
+            const delProds = window.AppState.deletedProducts || [];
+            const delClients = window.AppState.deletedClients || [];
+            const delInvs = window.AppState.deletedInvoices || [];
+            const delExps = window.AppState.deletedExpenses || [];
+
+            let html = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+            
+            const renderRow = (type, item, title, desc) => `
+                <div class="bg-white p-4 border border-slate-200 rounded-xl flex justify-between items-center shadow-sm">
+                    <div><div class="text-[10px] uppercase font-bold text-red-500 mb-1">${type}</div><div class="font-bold text-slate-800 text-sm">${title}</div><div class="text-xs text-slate-500">${desc}</div></div>
+                    <button onclick="window.restoreItem('${type}', '${item.id}')" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-xs rounded-lg transition-colors">Restore</button>
+                </div>`;
+
+            delInvs.forEach(i => html += renderRow('Invoice', i, i.id, `Total: ${formatINR(i.grandTotal)} | Client: ${i.client.name}`));
+            delProds.forEach(p => html += renderRow('Product', p, p.name, `Stock: ${p.stock} | Rate: ₹${p.rate}`));
+            delClients.forEach(c => html += renderRow('Client', c, c.name, `Mobile: ${c.mobile || 'N/A'}`));
+            delExps.forEach(e => html += renderRow('Expense', e, e.category, `Amount: ${formatINR(e.amount)}`));
+            
+            html += `</div>`;
+            if(delProds.length===0 && delClients.length===0 && delInvs.length===0 && delExps.length===0) html = `<div class="text-center p-8 text-slate-400">Recycle bin is empty.</div>`;
+            setHTML('trash-render-area', html);
+        }
+        window.closeTrashModal = function() { const mod = document.getElementById('trash-modal'); if(mod) mod.style.display = 'none'; }
+        
+        window.restoreItem = async function(type, id) {
+            let collectionName = '';
+            if(type === 'Invoice') collectionName = 'invoices';
+            if(type === 'Product') collectionName = 'products';
+            if(type === 'Client') collectionName = 'clients';
+            if(type === 'Expense') collectionName = 'expenses';
+            
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'users', window.AppState.user.uid, collectionName, id), { isDeleted: false });
+                window.showToast(`${type} restored successfully!`);
+                window.openTrashModal(); // Refresh modal
+            } catch(e) { window.showToast(`Failed to restore ${type}`, "error"); }
+        }
+
         window.populateSettingsUI = function() {
             const s = window.AppState.settings;
             setVal('set-biz-name', s.businessName || ''); setVal('set-biz-gstin', s.gstin || ''); setVal('set-biz-address', s.address || ''); 
             setVal('set-biz-phone', s.phone || ''); setVal('set-biz-upi', s.upi || ''); setVal('set-biz-terms', s.customTerms || ''); 
             setVal('set-biz-logo-display', s.logoDisplay || 'both'); setVal('set-lock-date', s.lockDate || ''); 
             setVal('set-bank-name', s.bankName || ''); setVal('set-bank-acc', s.bankAcc || ''); setVal('set-bank-ifsc', s.bankIfsc || '');
+            setVal('set-profit-formula', s.netProfitFormula || 'standard'); // Feature 5
             
             const pinEl = document.getElementById('set-pin-enable'); if(pinEl) { pinEl.checked = s.pinEnabled || false; window.togglePinFields(s.pinEnabled || false); }
             
@@ -1801,7 +2084,7 @@
             window.setTemplate(s.template || 'modern');
 
             const f = s.features || defaultFeatures;
-            const toggles = ['expenses', 'multiDoc', 'currency', 'shipping', 'tds', 'rcm', 'hsn', 'dueDate', 'ledger', 'creditNote', 'margin', 'batch'];
+            const toggles = ['expenses', 'multiDoc', 'currency', 'shipping', 'tds', 'rcm', 'hsn', 'dueDate', 'ledger', 'creditNote', 'margin', 'batch', 'deleteBtn', 'stamp', 'returnStock'];
             toggles.forEach(t => { const el = document.getElementById(`feat-${t}`); if(el) el.checked = f[t] !== false; });
         }
 
@@ -1827,8 +2110,9 @@
                 s.bankName = document.getElementById('set-bank-name') ? document.getElementById('set-bank-name').value : ''; 
                 s.bankAcc = document.getElementById('set-bank-acc') ? document.getElementById('set-bank-acc').value : ''; 
                 s.bankIfsc = document.getElementById('set-bank-ifsc') ? document.getElementById('set-bank-ifsc').value : '';
+                s.netProfitFormula = document.getElementById('set-profit-formula') ? document.getElementById('set-profit-formula').value : 'standard';
                 
-                s.features = {}; const toggles = ['expenses', 'multiDoc', 'currency', 'shipping', 'tds', 'rcm', 'hsn', 'dueDate', 'ledger', 'creditNote', 'margin', 'batch'];
+                s.features = {}; const toggles = ['expenses', 'multiDoc', 'currency', 'shipping', 'tds', 'rcm', 'hsn', 'dueDate', 'ledger', 'creditNote', 'margin', 'batch', 'deleteBtn', 'stamp', 'returnStock'];
                 toggles.forEach(t => { const el = document.getElementById(`feat-${t}`); if(el) s.features[t] = el.checked; });
 
                 const wantPinEl = document.getElementById('set-pin-enable'); const wantPin = wantPinEl ? wantPinEl.checked : false; 
@@ -1852,7 +2136,7 @@
 
         window.generateInvoiceHTML = function(inv) {
             const s = window.AppState.settings; const tpl = s.template || 'modern'; const curr = inv.currency || 'INR';
-            let paymentQR = ''; if(Number(inv.grandTotal) > 0 && s.upi && curr === 'INR') { const upiStr = `upi://pay?pa=${s.upi}&pn=${encodeURIComponent(s.businessName)}&am=${Number(inv.grandTotal).toFixed(2)}&cu=INR`; paymentQR = `<img src="${window.generateLocalQR(upiStr)}" class="w-20 h-20 border border-slate-200 p-1 rounded bg-white shadow-sm">`; }
+            let paymentQR = ''; if(Number(inv.grandTotal) > 0 && s.upi && curr === 'INR' && inv.paymentMode !== 'credit') { const upiStr = `upi://pay?pa=${s.upi}&pn=${encodeURIComponent(s.businessName)}&am=${Number(inv.grandTotal).toFixed(2)}&cu=INR`; paymentQR = `<img src="${window.generateLocalQR(upiStr)}" class="w-20 h-20 border border-slate-200 p-1 rounded bg-white shadow-sm">`; }
             const digitalURL = `https://dev-ayurveda.web.app/verify/${inv.id}`; const digitalQR = `<img src="${window.generateLocalQR(digitalURL)}" class="w-20 h-20 border border-slate-200 p-1 rounded bg-white shadow-sm">`;
 
             let logoHtml = ''; const dispStyle = s.logoDisplay || 'both';
@@ -1861,7 +2145,8 @@
             else logoHtml = `<div class="flex items-center gap-4">${s.logo ? `<img src="${s.logo}" class="h-16 object-contain max-w-[200px]">` : ''}<h1 class="text-3xl font-bold tracking-tight ${tpl === 'nature' ? 'text-green-800' : tpl==='corporate' ? 'text-blue-900' : 'text-emerald-800'}">${s.businessName}</h1></div>`;
 
             const sigHtml = s.signature ? `<img src="${s.signature}" class="h-10 object-contain mx-auto mb-1 relative z-10">` : `<div class="h-10 border-b-2 border-slate-200 mb-1 mx-4 w-40"></div>`;
-            const sealHtml = s.seal ? `<img src="${s.seal}" class="w-16 h-16 object-contain absolute opacity-50 -left-6 -top-2 mix-blend-multiply">` : '';
+            // Feature 4a: Check stamp toggle flag here
+            const sealHtml = (s.seal && window.isFeatureEnabled('stamp')) ? `<img src="${s.seal}" class="w-16 h-16 object-contain absolute opacity-50 -left-6 -top-2 mix-blend-multiply">` : '';
 
             const thHsn = window.isFeatureEnabled('hsn') ? '<th class="py-2 px-2 text-center w-16">HSN</th>' : '';
             const itemsHtml = inv.items.map((item, idx) => {
@@ -1919,7 +2204,7 @@
                         <div class="flex gap-4">
                             ${(s.bankName && s.bankAcc) ? `<div class="text-[10px] text-slate-600 mr-4"><div class="font-bold text-slate-800 mb-1 uppercase tracking-wider">Bank Details</div><div>Bank: ${s.bankName}</div><div>A/C: ${s.bankAcc}</div><div>IFSC: ${s.bankIfsc}</div></div>` : ''}
                             ${paymentQR ? `<div class="text-center">${paymentQR}<div class="text-[9px] font-bold text-emerald-700 mt-1 uppercase tracking-widest">Scan to Pay</div></div>` : ''}
-                            <div class="text-center">${digitalQR}<div class="text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Digital Copy</div></div>
+                            ${inv.paymentMode === 'credit' ? `<div class="text-center bg-amber-50 px-3 py-1 rounded border border-amber-200"><div class="text-[9px] font-bold text-amber-700 uppercase tracking-widest">Credit Sale</div></div>` : ''}
                         </div>
                         <div class="text-center relative">
                             ${sealHtml}
