@@ -6,16 +6,7 @@
     <title>Dev Ayurveda ERP - Modular Pro Edition</title>
     
     <!-- External Libraries -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-    <!-- SheetJS for Excel Import -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-
-    <script>
-        tailwind.config = {
+    <script>window.tailwind=window.tailwind||{};tailwind.config = {
             theme: {
                 extend: {
                     colors: { emerald: { 50: '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' } },
@@ -28,8 +19,14 @@
                     }
                 }
             }
-        }
-    </script>
+        };</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <!-- SheetJS for Excel Import -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
     <style>
         body { background-color: #f8fafc; font-family: sans-serif; }
@@ -412,7 +409,7 @@
                                     </div>
                                     <div class="flex justify-between text-emerald-300 text-xs pt-1"><span class="">CGST</span><span class="font-mono" id="summary-cgst">0.00</span></div>
                                     <div class="flex justify-between pb-3 border-b border-emerald-700 text-emerald-300 text-xs"><span class="">SGST</span><span class="font-mono" id="summary-sgst">0.00</span></div>
-                                    <div class="flex justify-between items-end pt-2"><span class="text-emerald-100 text-lg">Net Payable</span><span class="text-3xl font-bold tracking-tight" id="summary-grand">0.00</span></div>
+                                    <div class="flex justify-between items-end pt-2"><span class="text-emerald-100 text-lg" id="net-payable-label">Net Payable</span><span class="text-3xl font-bold tracking-tight" id="summary-grand">0.00</span></div>
                                 </div>
                             </div>
                             <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
@@ -1291,16 +1288,32 @@
         }
 
         window.getNextInvoiceId = function() {
-            const monthStr = new Date().toLocaleString('default', { month: 'short' }).toUpperCase();
-            const prefix = `DEV${monthStr}`;
-            // Use all invoices (including deleted ones) to maintain exact continuity of IDs without conflicts
-            const existing = [...window.AppState.invoices, ...window.AppState.deletedInvoices].filter(i => i.id && i.id.startsWith(prefix));
-            let maxNum = 0;
-            existing.forEach(i => {
-                const num = parseInt(i.id.replace(prefix, ''), 10);
-                if (!isNaN(num) && num > maxNum) maxNum = num;
-            });
-            return `${prefix}${(maxNum + 1).toString().padStart(3, '0')}`;
+            const INV_MODE = localStorage.getItem('ayur_inv_mode') || 'advanced';
+            const allInv = [...(window.AppState.invoices||[]), ...(window.AppState.deletedInvoices||[])];
+            if (INV_MODE === 'simple') {
+                const now = new Date();
+                const fy = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+                const fyStart = new Date(fy, 3, 1);
+                let max = 0;
+                allInv.forEach(i => {
+                    if (i.date && new Date(i.date) >= fyStart) {
+                        const n = parseInt(i.id, 10);
+                        if (!isNaN(n) && n > max) max = n;
+                    }
+                });
+                return String(max + 1).padStart(4, '0');
+            } else {
+                const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+                const now = new Date();
+                const yr = String(now.getFullYear()).slice(2);
+                const prefix = 'DEV' + months[now.getMonth()] + yr;
+                let max = 0;
+                allInv.filter(i => i.id && i.id.startsWith(prefix)).forEach(i => {
+                    const n = parseInt(i.id.slice(prefix.length), 10);
+                    if (!isNaN(n) && n > max) max = n;
+                });
+                return prefix + String(max + 1).padStart(2, '0');
+            }
         }
 
         function setupFirestoreListeners() {
@@ -1660,27 +1673,83 @@
         window.setPaymentMode = function(mode) { window.AppState.draft.paymentMode = mode; window.updateInvoiceUI(); }
 
         window.calculateInvoiceTotals = function() {
-            let subtotal = 0, totalTax = 0; window.AppState.draft.items.forEach(item => { const lineTotal = Number(item.qty) * Number(item.rate); totalTax += lineTotal * (Number(item.gst) / 100); subtotal += lineTotal; });
-            let discountInput = Number(window.AppState.draft.discount) || 0; let discountAmt = window.AppState.draft.discountType === 'percent' ? (subtotal * (discountInput / 100)) : discountInput;
-            let tdsAmt = Number(window.AppState.draft.tds) > 0 ? (subtotal * (Number(window.AppState.draft.tds) / 100)) : 0;
-            const grandTotal = Math.max(0, subtotal + totalTax - discountAmt - tdsAmt);
+            const draft = window.AppState.draft;
+            const curr = draft.currency || 'INR';
+            const showExcl = (window.AppState.settings.netPayableExclGST === true);
+            let baseSum = 0, taxSum = 0;
+            draft.items.forEach(item => {
+                const qty = Number(item.qty) || 0;
+                const rate = Number(item.rate) || 0;
+                const gst = Number(item.gst) || 0;
+                if (item.inclusive && gst > 0) {
+                    const base = rate / (1 + gst / 100);
+                    baseSum += base * qty; taxSum += (rate - base) * qty;
+                } else {
+                    baseSum += rate * qty; taxSum += rate * (gst / 100) * qty;
+                }
+            });
+            const discIn = Number(draft.discount) || 0;
+            const discAmt = draft.discountType === 'percent' ? baseSum * (discIn / 100) : discIn;
+            const tdsAmt = Number(draft.tds) > 0 ? baseSum * (Number(draft.tds) / 100) : 0;
+            const grandTotal = Math.max(0, baseSum + taxSum - discAmt - tdsAmt);
+            const displayAmt = showExcl ? Math.max(0, baseSum - discAmt - tdsAmt) : grandTotal;
 
-            const curr = window.AppState.draft.currency || 'INR';
-            setText('summary-subtotal', window.formatCurrency(subtotal, curr)); 
-            setText('summary-tax', window.formatCurrency(totalTax, curr)); 
-            setText('summary-grand', window.formatCurrency(grandTotal, curr));
-            
-            setText('summary-cgst', window.formatCurrency(totalTax / 2, curr));
-            setText('summary-sgst', window.formatCurrency(totalTax / 2, curr));
+            setText('summary-subtotal', window.formatCurrency(baseSum, curr));
+            setText('summary-tax',      window.formatCurrency(taxSum, curr));
+            setText('summary-grand',    window.formatCurrency(displayAmt, curr));
+            setText('summary-cgst',     window.formatCurrency(taxSum / 2, curr));
+            setText('summary-sgst',     window.formatCurrency(taxSum / 2, curr));
 
-            const qrWrapper = document.getElementById('qr-image-wrapper');
-            if(qrWrapper) {
-                if(grandTotal > 0 && window.AppState.draft.paymentMode === 'upi' && curr === 'INR') {
-                    const upiStr = `upi://pay?pa=${window.AppState.settings.upi || 'business@upi'}&pn=${encodeURIComponent(window.AppState.settings.businessName)}&am=${grandTotal.toFixed(2)}&cu=INR`;
-                    qrWrapper.innerHTML = `<img src="${window.generateLocalQR(upiStr)}" class="w-[140px] h-[140px] block mx-auto rounded">`;
-                } else { qrWrapper.innerHTML = `<div class="w-[140px] h-[140px] bg-slate-100 flex items-center justify-center text-slate-400 text-xs text-center">Add items<br>to generate QR</div>`; }
+            const grandLabel = document.getElementById('net-payable-label');
+            if (grandLabel) grandLabel.textContent = showExcl ? 'Net Payable (Excl. GST)' : 'Net Payable';
+
+            let box = document.getElementById('inv-acct-box');
+            if (!box) {
+                const sgstEl = document.getElementById('summary-sgst');
+                if (sgstEl) {
+                    const par = sgstEl.closest('.space-y-3');
+                    if (par) {
+                        box = document.createElement('div');
+                        box.id = 'inv-acct-box';
+                        box.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.15);font-size:11px';
+                        par.appendChild(box);
+                    }
+                }
             }
-            return { subtotal, totalTax, grandTotal, discountAmountCalculated: discountAmt, tdsCalculated: tdsAmt };
+            if (box) {
+                while (box.firstChild) box.removeChild(box.firstChild);
+                const mkRow = (label, val, color) => {
+                    const d = document.createElement('div');
+                    d.style.cssText = 'display:flex;justify-content:space-between;color:' + color + ';margin-bottom:3px';
+                    const s = document.createElement('span'); s.textContent = label;
+                    const v = document.createElement('span'); v.textContent = val;
+                    d.appendChild(s); d.appendChild(v); return d;
+                };
+                const lbl = document.createElement('div');
+                lbl.style.cssText = 'font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#6ee7b7;font-weight:700;margin-bottom:5px';
+                lbl.textContent = 'Bill Breakdown';
+                box.appendChild(lbl);
+                box.appendChild(mkRow('Taxable Base', window.formatCurrency(baseSum, curr), '#a7f3d0'));
+                box.appendChild(mkRow('GST Amount', '+ ' + window.formatCurrency(taxSum, curr), '#a7f3d0'));
+                if (discAmt > 0) box.appendChild(mkRow('Discount', '- ' + window.formatCurrency(discAmt, curr), '#fca5a5'));
+                if (tdsAmt  > 0) box.appendChild(mkRow('TDS', '- ' + window.formatCurrency(tdsAmt, curr), '#fcd34d'));
+                if (showExcl)    box.appendChild(mkRow('GST (not included)', window.formatCurrency(taxSum, curr), '#fbbf24'));
+                const tot = document.createElement('div');
+                tot.style.cssText = 'display:flex;justify-content:space-between;font-weight:700;font-size:13px;color:#fff;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.2)';
+                const tl = document.createElement('span'); tl.textContent = showExcl ? 'Net Payable (Excl. GST)' : 'Net Payable';
+                const tv = document.createElement('span'); tv.textContent = window.formatCurrency(displayAmt, curr);
+                tot.appendChild(tl); tot.appendChild(tv); box.appendChild(tot);
+            }
+            const qrWrapper = document.getElementById('qr-image-wrapper');
+            if (qrWrapper) {
+                if (grandTotal > 0 && draft.paymentMode === 'upi' && curr === 'INR') {
+                    const upiStr = 'upi://pay?pa=' + (window.AppState.settings.upi || 'business@upi') + '&pn=' + encodeURIComponent(window.AppState.settings.businessName || '') + '&am=' + grandTotal.toFixed(2) + '&cu=INR';
+                    qrWrapper.innerHTML = '<img src="' + (window.generateLocalQR(upiStr)||'') + '" class="w-[140px] h-[140px] block mx-auto rounded">';
+                } else {
+                    qrWrapper.innerHTML = '<div class="w-[140px] h-[140px] bg-slate-100 flex items-center justify-center text-slate-400 text-xs text-center">Add items<br>to generate QR</div>';
+                }
+            }
+            return { subtotal: baseSum, totalTax: taxSum, grandTotal, discountAmountCalculated: discAmt, tdsCalculated: tdsAmt };
         }
 
         window.restoreDraftToUI = function() {
@@ -2242,7 +2311,9 @@
             setVal('set-biz-phone', s.phone || ''); setVal('set-biz-upi', s.upi || ''); setVal('set-biz-terms', s.customTerms || ''); 
             setVal('set-biz-logo-display', s.logoDisplay || 'both'); setVal('set-lock-date', s.lockDate || ''); 
             setVal('set-bank-name', s.bankName || ''); setVal('set-bank-acc', s.bankAcc || ''); setVal('set-bank-ifsc', s.bankIfsc || '');
-            setVal('set-profit-formula', s.netProfitFormula || 'standard'); 
+            setVal('set-profit-formula', s.netProfitFormula || 'standard');
+            const exclEl = document.getElementById('set-net-excl-gst');
+            if (exclEl) exclEl.checked = s.netPayableExclGST || false; 
             
             const pinEl = document.getElementById('set-pin-enable'); if(pinEl) { pinEl.checked = s.pinEnabled || false; window.togglePinFields(s.pinEnabled || false); }
             
@@ -2298,6 +2369,7 @@
                 s.bankAcc = document.getElementById('set-bank-acc') ? document.getElementById('set-bank-acc').value : ''; 
                 s.bankIfsc = document.getElementById('set-bank-ifsc') ? document.getElementById('set-bank-ifsc').value : '';
                 s.netProfitFormula = document.getElementById('set-profit-formula') ? document.getElementById('set-profit-formula').value : 'standard';
+                s.netPayableExclGST = document.getElementById('set-net-excl-gst') ? document.getElementById('set-net-excl-gst').checked : false;
                 
                 s.features = {}; const toggles = ['expenses', 'multiDoc', 'currency', 'shipping', 'tds', 'rcm', 'hsn', 'dueDate', 'ledger', 'creditNote', 'margin', 'batch', 'deleteBtn', 'stamp', 'returnStock'];
                 toggles.forEach(t => { const el = document.getElementById(`feat-${t}`); if(el) s.features[t] = el.checked; });
@@ -2417,5 +2489,350 @@
 </script>
 
 
+
+
+<!-- ERP ENHANCEMENTS SAFE VERSION -->
+<script>
+(function(){
+
+/* -----------------------------
+1. CUSTOM INVOICE NUMBER SYSTEM
+--------------------------------*/
+window.AppSettings = window.AppSettings || {};
+window.AppSettings.invoiceConfig = window.AppSettings.invoiceConfig || {
+    prefix:"INV-",
+    suffix:"",
+    padding:4,
+    mode:"auto",
+    reset:"yearly",
+    counter:1,
+    lastReset:new Date().toISOString()
+};
+
+window.generateInvoiceNumber = function(){
+    const cfg = window.AppSettings.invoiceConfig;
+    if(cfg.mode === "manual") return "";
+
+    const now = new Date();
+    const last = new Date(cfg.lastReset);
+
+    if(cfg.reset==="yearly" && now.getFullYear()!==last.getFullYear()){
+        cfg.counter = 1;
+        cfg.lastReset = now.toISOString();
+    }
+
+    if(cfg.reset==="monthly" && (now.getMonth()!==last.getMonth() || now.getFullYear()!==last.getFullYear())){
+        cfg.counter = 1;
+        cfg.lastReset = now.toISOString();
+    }
+
+    const num = String(cfg.counter).padStart(cfg.padding,"0");
+    cfg.counter++;
+    return cfg.prefix + num + cfg.suffix;
+};
+
+
+/* -----------------------------
+2. GST CALCULATION
+--------------------------------*/
+window.calculateGST = function(price, gstRate, inclusive){
+    price = Number(price || 0);
+    gstRate = Number(gstRate || 0);
+
+    if(inclusive){
+        const base = price / (1 + gstRate/100);
+        const gst = price - base;
+        return {
+            base_price:+base.toFixed(2),
+            gst_amount:+gst.toFixed(2),
+            final_price:price
+        };
+    }else{
+        const gst = price * gstRate/100;
+        return {
+            base_price:price,
+            gst_amount:+gst.toFixed(2),
+            final_price:+(price+gst).toFixed(2)
+        };
+    }
+};
+
+
+/* -----------------------------
+3. SAFE SAVE PRODUCT HOOK
+--------------------------------*/
+document.addEventListener("DOMContentLoaded",function(){
+
+    const rateInput = document.getElementById("new-prod-rate");
+    if(rateInput && !document.getElementById("new-prod-inclusive")){
+        const box = document.createElement("div");
+        box.innerHTML = `
+        <label style="font-size:13px;display:block;margin-top:8px">
+        <input type="checkbox" id="new-prod-inclusive"/> Price is Inclusive of GST
+        </label>`;
+        rateInput.parentNode.appendChild(box);
+    }
+
+    if(typeof window.saveProduct === "function"){
+        const oldSave = window.saveProduct;
+
+        window.saveProduct = function(){
+            try{
+                const inclusive = document.getElementById("new-prod-inclusive")?.checked || false;
+                const price = document.getElementById("new-prod-rate")?.value || 0;
+                const gst = document.getElementById("new-prod-gst")?.value || 0;
+
+                const calc = calculateGST(price,gst,inclusive);
+
+                window.ProductMeta = {
+                    base_price:calc.base_price,
+                    tax_rate:gst,
+                    is_inclusive:inclusive
+                };
+            }catch(e){ console.warn(e); }
+
+            return oldSave.apply(this,arguments);
+        };
+    }
+
+});
+
+
+/* -----------------------------
+4. PURCHASE ORDER SYSTEM
+--------------------------------*/
+window.POSystem = window.POSystem || {
+    orders:[],
+
+    createPO(data){
+        data.id = "PO-"+Date.now();
+        data.status = "Draft";
+        data.items = data.items || [];
+        this.orders.push(data);
+        renderPOList();
+    },
+
+    updateStatus(id,status){
+        const po = this.orders.find(p=>p.id===id);
+        if(!po) return;
+
+        po.status = status;
+
+        if(status==="Received" && window.AppState?.inventory){
+            po.items.forEach(it=>{
+                const prod = window.AppState.inventory.find(p=>p.name===it.name);
+                if(prod) prod.stock = Number(prod.stock||0) + Number(it.qty||0);
+            });
+        }
+
+        renderPOList();
+    }
+};
+
+window.renderPOList = function(){
+    const list = document.getElementById("po-list");
+    if(!list) return;
+
+    list.innerHTML = "";
+
+    POSystem.orders.forEach(po=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+        <td>${po.id}</td>
+        <td>${po.vendor||""}</td>
+        <td>${po.status}</td>
+        <td>${po.expected||""}</td>
+        <td style="text-align:right">
+        <button onclick="POSystem.updateStatus('${po.id}','Sent')">Send</button>
+        <button onclick="POSystem.updateStatus('${po.id}','Received')">Receive</button>
+        </td>`;
+
+        list.appendChild(tr);
+    });
+};
+
+window.createPO = function(){
+    const vendor = document.getElementById("po-vendor")?.value || "";
+    const expected = document.getElementById("po-date")?.value || "";
+
+    POSystem.createPO({vendor,expected});
+};
+
+})();
+</script>
+
+
+
+
+<!-- ===== DEV AYURVEDA ERP v4 CLEAN PATCH ===== -->
+<script>
+(function () {
+
+/* ── Invoice Numbering Settings Card ── */
+document.addEventListener("DOMContentLoaded", function () {
+
+    var view = document.getElementById("view-settings");
+    if (!view || document.getElementById("inv-numbering-card")) return;
+
+    var saved = localStorage.getItem("ayur_inv_mode") || "advanced";
+
+    /* ── Build the card ── */
+    var wrap = document.createElement("div");
+    wrap.id = "inv-numbering-card";
+    wrap.className = "bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4 col-span-1 md:col-span-2";
+
+    var hdr = document.createElement("div");
+    hdr.className = "flex items-center gap-2 border-b border-slate-200 pb-3 mb-2";
+    var ht = document.createElement("h3");
+    ht.className = "font-bold text-slate-800 text-base flex items-center gap-2";
+    ht.innerHTML = '<svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> Invoice Numbering Style';
+    hdr.appendChild(ht);
+
+    var desc = document.createElement("p");
+    desc.className = "text-xs text-slate-500 -mt-2";
+    desc.textContent = "Choose how invoice numbers are generated. Saved locally in your browser.";
+
+    function makeCard(mode, codeText, titleText, subText, hintText) {
+        var isActive = (saved === mode);
+        var card = document.createElement("label");
+        card.setAttribute("data-mode", mode);
+        card.className = "flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all " +
+            (isActive ? "border-emerald-500 bg-emerald-50" : "border-slate-200 hover:border-emerald-300 bg-white");
+        card.style.marginBottom = "10px";
+
+        var radio = document.createElement("input");
+        radio.type = "radio"; radio.name = "inv-numbering"; radio.checked = isActive;
+        radio.style.cssText = "margin-top:3px;width:16px;height:16px;accent-color:#059669;flex-shrink:0";
+        radio.addEventListener("change", function () { window.selectInvMode(mode); });
+
+        var info = document.createElement("div");
+        var tRow = document.createElement("div");
+        tRow.className = "font-bold text-slate-800 text-sm mb-1";
+        var titleNode = document.createTextNode(titleText + " ");
+        var cEl = document.createElement("code");
+        cEl.className = "bg-slate-100 px-1.5 py-0.5 rounded text-emerald-700 text-xs";
+        cEl.textContent = codeText;
+        tRow.appendChild(titleNode); tRow.appendChild(cEl);
+
+        var sEl = document.createElement("div");
+        sEl.className = "text-xs text-slate-500 mb-0.5";
+        sEl.textContent = subText;
+
+        var hEl = document.createElement("div");
+        hEl.className = "text-xs text-slate-400";
+        hEl.textContent = hintText;
+
+        info.appendChild(tRow); info.appendChild(sEl); info.appendChild(hEl);
+        card.appendChild(radio); card.appendChild(info);
+        return card;
+    }
+
+    var note = document.createElement("div");
+    note.className = "text-xs text-slate-400 bg-slate-50 rounded-lg p-3 border border-slate-200";
+    note.innerHTML = "<strong>Note:</strong> Changing this only affects new invoices. Existing invoices keep their IDs.";
+
+    /* Net Payable Excl GST toggle */
+    var exclWrap = document.createElement("div");
+    exclWrap.className = "flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 mt-2";
+    var exclCb = document.createElement("input");
+    exclCb.type = "checkbox"; exclCb.id = "set-net-excl-gst";
+    exclCb.className = "w-5 h-5 mt-0.5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500";
+    var exclInfo = document.createElement("div");
+    var exclTitle = document.createElement("label");
+    exclTitle.htmlFor = "set-net-excl-gst";
+    exclTitle.className = "font-bold text-slate-700 text-sm cursor-pointer block";
+    exclTitle.textContent = "Show Net Payable without GST";
+    var exclDesc = document.createElement("p");
+    exclDesc.className = "text-xs text-slate-500 mt-0.5";
+    exclDesc.textContent = "Invoice summary will display Net Payable = Subtotal only (GST shown separately for reference).";
+    exclInfo.appendChild(exclTitle); exclInfo.appendChild(exclDesc);
+    exclWrap.appendChild(exclCb); exclWrap.appendChild(exclInfo);
+
+    wrap.appendChild(hdr);
+    wrap.appendChild(desc);
+    wrap.appendChild(makeCard("advanced", "DEVMAR2501", "Advanced Format",
+        "DEV + Month + Year (2 digits) + Serial. Example: DEVMAR2501, DEVMAR2502",
+        "Resets each month automatically. No manual reset needed."));
+    wrap.appendChild(makeCard("simple", "0001 to 9999", "Simple Format",
+        "4-digit counter starting from 0001 every financial year.",
+        "Resets every April 1 (Indian Financial Year)."));
+    wrap.appendChild(note);
+    wrap.appendChild(exclWrap);
+
+    /* Insert into settings grid */
+    var grid = view.querySelector(".grid");
+    if (grid) grid.parentNode.insertBefore(wrap, grid);
+    else view.prepend(wrap);
+});
+
+window.selectInvMode = function (mode) {
+    localStorage.setItem("ayur_inv_mode", mode);
+    document.querySelectorAll("[data-mode]").forEach(function (c) {
+        var a = c.getAttribute("data-mode") === mode;
+        c.className = c.className
+            .replace("border-emerald-500 bg-emerald-50", "border-slate-200 bg-white")
+            .replace("border-slate-200 bg-white", a ? "border-emerald-500 bg-emerald-50" : "border-slate-200 bg-white");
+        var r = c.querySelector("input[type=radio]");
+        if (r) r.checked = a;
+    });
+    if (window.AppState && window.AppState.draft) {
+        window.AppState.draft.id = window.getNextInvoiceId();
+        var el = document.getElementById("inv-id-display");
+        if (el) el.textContent = window.AppState.draft.id;
+    }
+    if (window.showToast) window.showToast("Invoice numbering updated!");
+};
+
+/* ── GST-Inclusive checkbox in product form ── */
+document.addEventListener("DOMContentLoaded", function () {
+    var rateInput = document.getElementById("new-prod-rate");
+    if (rateInput && !document.getElementById("prod-inclusive")) {
+        var wrap = document.createElement("div");
+        wrap.className = "flex items-center gap-2 mt-2";
+        var cb = document.createElement("input");
+        cb.type = "checkbox"; cb.id = "prod-inclusive";
+        cb.className = "w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500";
+        var lb = document.createElement("label");
+        lb.htmlFor = "prod-inclusive";
+        lb.className = "text-sm font-medium text-slate-700 cursor-pointer";
+        lb.textContent = "Price is GST-inclusive (tax already embedded in rate)";
+        wrap.appendChild(cb); wrap.appendChild(lb);
+        rateInput.parentNode.appendChild(wrap);
+    }
+});
+
+/* patch addDraftItem to carry inclusive flag */
+var _pI = setInterval(function () {
+    if (window.addDraftItem && !window.addDraftItem._incl) {
+        var orig = window.addDraftItem;
+        window.addDraftItem = function (p) {
+            orig(p);
+            var items = window.AppState && window.AppState.draft && window.AppState.draft.items;
+            if (items && items.length) items[items.length - 1].inclusive = !!p.inclusive;
+        };
+        window.addDraftItem._incl = true;
+        clearInterval(_pI);
+    }
+}, 300);
+
+/* patch editProduct to restore inclusive checkbox */
+var _eI = setInterval(function () {
+    if (window.editProduct && !window.editProduct._incl) {
+        var origEdit = window.editProduct;
+        window.editProduct = function (id) {
+            origEdit(id);
+            setTimeout(function () {
+                var p = ((window.AppState && window.AppState.products) || []).find(function (x) { return x.id === id; });
+                var el = document.getElementById("prod-inclusive");
+                if (p && el) el.checked = !!p.inclusive;
+            }, 80);
+        };
+        window.editProduct._incl = true;
+        clearInterval(_eI);
+    }
+}, 300);
+
+})();
+</script>
 </body>
 </html>
