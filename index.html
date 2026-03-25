@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>My Business ERP</title>
+<title>Dev Ayurveda ERP</title>
 <meta name="theme-color" content="#059669">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -273,7 +273,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f0f2f5;color:#0f172a
       <i data-lucide="leaf" class="w-10 h-10 text-emerald-400"></i>
     </div>
     <div class="text-center">
-      <h1 class="text-3xl font-bold text-white tracking-tight">My Business </h1>
+      <h1 class="text-3xl font-bold text-white tracking-tight">Dev Ayurveda </h1>
       <p class="text-emerald-400 text-xs font-bold uppercase tracking-widest mt-1">Professional ERP</p>
     </div>
   </div>
@@ -315,7 +315,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f0f2f5;color:#0f172a
         <!-- Signup -->
         <form id="signup-form" onsubmit="handleSignup(event)" class="space-y-3 hidden mt-1">
           <div><label class="lbl text-slate-300">Business Name</label>
-            <input type="text" id="signup-biz-name" class="inp bg-white/5 border-white/10 text-white" placeholder="My Business "></div>
+            <input type="text" id="signup-biz-name" class="inp bg-white/5 border-white/10 text-white" placeholder="Dev Ayurveda "></div>
           <div><label class="lbl text-slate-300">Email</label>
             <input type="email" id="signup-email" required class="inp bg-white/5 border-white/10 text-white"></div>
           <div><label class="lbl text-slate-300">Password</label>
@@ -381,7 +381,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f0f2f5;color:#0f172a
           <i data-lucide="leaf" class="w-5 h-5 text-white"></i>
         </div>
         <div>
-          <div class="text-white font-bold text-sm leading-tight">My Business </div>
+          <div class="text-white font-bold text-sm leading-tight">Dev Ayurveda </div>
           <div class="text-emerald-500 text-[9px] font-bold uppercase tracking-widest">Modular Pro ERP</div>
         </div>
       </div>
@@ -762,7 +762,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f0f2f5;color:#0f172a
     <div class="flex items-center gap-4">
       <div class="w-14 h-14 bg-white/10 border border-white/20 rounded-xl overflow-hidden flex items-center justify-center" id="settings-logo-preview"><i data-lucide="building-2" class="w-7 h-7 text-emerald-400"></i></div>
       <div class="flex-1 min-w-0">
-        <div class="text-white font-bold text-base" id="settings-biz-display">My Business </div>
+        <div class="text-white font-bold text-base" id="settings-biz-display">Dev Ayurveda </div>
         <div class="text-emerald-400 text-xs font-medium" id="settings-email-display">...</div>
         <div class="flex gap-2 mt-1.5"><span class="badge bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px]">Active</span><span class="badge bg-white/10 text-white/60 text-[10px]">Admin</span></div>
       </div>
@@ -1379,7 +1379,7 @@ async function shareInvoiceWA() {
     if(!id) return;
     var inv = window.AppState && window.AppState.invoices.find(function(i){ return i.id===id; });
     if(!inv) return;
-    var biz = (window.AppState.settings && window.AppState.settings.businessName) || 'My Business ';
+    var biz = (window.AppState.settings && window.AppState.settings.businessName) || 'Dev Ayurveda ';
     var fmt = window.formatCurrency || function(a){ return '₹'+Number(a).toFixed(2); };
     var msg = '🌿 *' + biz + '*'
         + '\n\nHello ' + inv.client.name + ','
@@ -1547,7 +1547,7 @@ async function shareInvoiceWA() {
     var inv = window.AppState && window.AppState.invoices.find(function(i){ return i.id === id; });
     if(!inv) return;
 
-    var biz = (window.AppState.settings && window.AppState.settings.businessName) || 'My Business ';
+    var biz = (window.AppState.settings && window.AppState.settings.businessName) || 'Dev Ayurveda ';
     var fmt = window.formatCurrency || function(a){ return '₹' + Number(a).toFixed(2); };
     var msg = '🌿 *' + biz + '*'
         + '\n\nHello ' + inv.client.name + ','
@@ -1884,7 +1884,7 @@ function openWAForClient() {
     var m = document.getElementById('cl-mobile').value.replace(/\D/g,'');
     var n = document.getElementById('cl-name').value;
     var num = m.length===10?'91'+m:m;
-    window.open('https://wa.me/'+(num||'')+'?text='+encodeURIComponent('Hello '+n+', from My Business !'),'_blank');
+    window.open('https://wa.me/'+(num||'')+'?text='+encodeURIComponent('Hello '+n+', from Dev Ayurveda !'),'_blank');
 }
 window.toggleClientModal = function(show,isNew,id){ if(show) openClientDrawer(id||null,isNew); else closeClientDrawer(); };
 window.editClient = function(id){ openClientDrawer(id,false); };
@@ -2015,7 +2015,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const defaultAppId = 'dev-ayurveda-pro-auth';
         const appId = typeof __app_id !== 'undefined' ? __app_id : defaultAppId;
@@ -2029,14 +2029,16 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             app = initializeApp(firebaseConfig); 
             auth = getAuth(app); 
-            // ✅ Firebase 11.x offline persistence (new API — replaces deprecated enableIndexedDbPersistence)
-            try {
-                db = initializeFirestore(app, {
-                    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-                });
-            } catch(e) {
-                db = getFirestore(app); // fallback
-            }
+            db = getFirestore(app);
+
+            // ✅ OFFLINE PERSISTENCE — IndexedDB
+            enableIndexedDbPersistence(db).catch((err) => {
+                if (err.code === 'failed-precondition') {
+                    console.warn('Persistence failed: multiple tabs open');
+                } else if (err.code === 'unimplemented') {
+                    console.warn('Persistence not supported in this browser');
+                }
+            });
 
             // Expose for non-module scripts
             window._auth = auth;
@@ -3421,7 +3423,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const html = `
             <div class="font-sans bg-white relative p-8">
-                <h1 class="text-3xl font-bold text-slate-800 mb-2">${window.AppState.settings.businessName || 'My Business '}</h1>
+                <h1 class="text-3xl font-bold text-slate-800 mb-2">${window.AppState.settings.businessName || 'Dev Ayurveda '}</h1>
                 <h2 class="text-xl text-slate-500 mb-8 border-b pb-4">Statement of Accounts: ${clientName}</h2>
                 <table class="w-full text-left text-sm mb-8"><thead class="bg-slate-100"><tr><th class="py-2 px-2">Date</th><th class="py-2 px-2">Invoice No.</th><th class="py-2 px-2 text-right">Invoice Amount</th><th class="py-2 px-2 text-center">Status</th><th class="py-2 px-2 text-right">Running Due Balance</th></tr></thead><tbody>${rows}</tbody></table>
                 <div class="text-right text-lg font-bold text-slate-800">Total Outstanding Balance: <span class="text-red-600">₹${runningBal.toFixed(2)}</span></div>
@@ -3828,7 +3830,7 @@ document.addEventListener('DOMContentLoaded', function() {
             logoHtml = '';
         }
         if(tpl === 'ayurveda') {
-            // My Business special - warm green herbal theme
+            // Dev Ayurveda special - warm green herbal theme
             wrapperStyle = 'border-top:6px solid #065f46;';
             headerStyles = '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;margin-bottom:20px;border-bottom:1px solid #d1fae5;"><div style="display:flex;align-items:center;gap:12px;">'+(s.logo?`<img src="${s.logo}" style="height:50px;object-fit:contain;">`:'<div style="width:44px;height:44px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;">🌿</div>')+`<div><h1 style="font-size:18px;font-weight:800;color:#064e3b;">${s.businessName}</h1><p style="font-size:9px;color:#059669;text-transform:uppercase;letter-spacing:0.15em;margin-top:2px;">Ayurvedic Wellness Center</p></div></div><div style="text-align:right;"><div style="background:#064e3b;color:white;padding:6px 12px;border-radius:6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;">Tax Invoice</div><p style="font-size:9px;color:#64748b;margin-top:6px;">${s.phone?'📞 '+s.phone:''}</p></div></div>`;
             tableHeadStyles = 'background:#065f46;color:#a7f3d0;font-size:11px;font-weight:600;';
